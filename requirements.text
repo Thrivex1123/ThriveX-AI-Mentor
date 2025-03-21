@@ -1,11 +1,8 @@
 streamlit
 openai
 numpy
-SpeechRecognition
 librosa
 tensorflow
+scipy
 soundfile
 audioread
-scipy
-pyaudio
-
