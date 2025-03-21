@@ -1,23 +1,18 @@
-# 🚀 ThriveX AI Mentor
+# ThriveX AI Mentor 🎙️🚀
 
-An AI-powered voice mentor that analyzes your speech, detects emotions, and gives real-time motivational advice — all powered by GPT and emotion AI.
+An AI-powered voice mentor that listens to your uploaded audio, detects emotion, and provides personalized motivational coaching using OpenAI.
 
-## 🎯 Features
+## Features
 
-- 🎤 Voice transcription
-- 🧠 Emotion analysis (mocked)
-- 💬 Motivational advice using GPT-4
-- 📊 Real-time coaching
+- 🎧 Upload voice recordings (WAV or MP3)
+- 🧠 Emotion detection (placeholder random)
+- 💬 Transcription with Whisper API
+- 🤖 GPT-4-based motivational advice
 
-## 🛠 How It Works
+## How to Run Locally
 
-1. You speak into the mic.
-2. Your voice is transcribed using Google's Speech Recognition.
-3. Emotion is detected (placeholder logic).
-4. GPT-4 provides motivational advice based on your input + emotion.
+1. Clone the repo
+2. Create `.streamlit/secrets.toml` and add your OpenAI key:
 
-## 🧪 Run Locally
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
+```toml
+OPENAI_API_KEY = "your-api-key"
