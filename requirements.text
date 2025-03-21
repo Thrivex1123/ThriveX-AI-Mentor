@@ -1,0 +1,10 @@
+streamlit
+openai
+numpy
+SpeechRecognition
+librosa
+tensorflow
+soundfile
+audioread
+scipy
+pyaudio
