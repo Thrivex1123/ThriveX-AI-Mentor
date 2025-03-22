@@ -40,7 +40,7 @@ st.title("🚀 ThriveX AI Mentor")
 st.write("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
 # Upload Section
-audio_file = st.file_uploader("🎙️ Upload a voice recording (MP3/WAV)", type=["mp3", "wav"])
+audio_file = st.file_uploader("🎙️ Upload a voice recording (MP3/WAV/M4A)", type=["mp3", "wav", "m4a"])
 
 if audio_file:
     st.audio(audio_file, format="audio/wav")
