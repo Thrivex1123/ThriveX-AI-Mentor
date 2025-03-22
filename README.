@@ -1,26 +1,33 @@
-
 # 🚀 ThriveX AI Mentor
 
-ThriveX is an AI-powered voice mentor app built with Streamlit. It listens to your voice, detects your emotional tone, and provides motivational advice in real time.
+ThriveX is your personal AI-powered growth companion. It listens to your voice, understands your emotions, and delivers real-time motivational advice through GPT-4 Turbo.
+
+---
 
 ## 🎯 Features
-- 🎙️ Upload your voice (WAV/MP3)
-- 🧠 AI-powered emotion analysis (mocked for now)
-- 💬 ChatGPT (GPT-4 Turbo) motivational coaching
-- ☁️ Deployed on Streamlit Cloud
 
-## 🛠️ Tech Stack
+- 🎙️ Voice-based interaction
+- 🧠 Emotion detection (AI-enhanced or mocked for now)
+- 💬 Motivational coaching with OpenAI GPT-4
+- ☁️ Cloud-hosted via Streamlit
+- 🔐 Secure API key management via `.streamlit/secrets.toml`
+
+---
+
+## 🛠 Tech Stack
+
 - Python + Streamlit
-- OpenAI API (GPT-4 Turbo)
-- Whisper API (for transcription)
-- TensorFlow (optional for emotion model)
-- Deployed on Streamlit Cloud
+- OpenAI GPT-4 Turbo
+- Whisper API (or local mic for devs)
+- TensorFlow (optional for future emotion modeling)
 
-## 🚀 Getting Started
-Clone the repo:
+---
+
+## 🚀 Run Locally
 
 ```bash
 git clone https://github.com/Thrivex1123/ThriveX-AI-Mentor
 cd ThriveX-AI-Mentor
 pip install -r requirements.txt
 streamlit run app.py
+
