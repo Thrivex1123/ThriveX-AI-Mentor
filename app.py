@@ -2,56 +2,21 @@ import streamlit as st
 import openai
 import numpy as np
 from datetime import datetime
-from st_audiorec import st_audiorec
+from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
+import av
+import queue
 import tempfile
-st.subheader("🎙️ Record your voice")
+import os
 
-wav_audio_data = st_audiorec()
-
-if wav_audio_data is not None:
-    st.audio(wav_audio_data, format="audio/wav")
-
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
-        temp_audio.write(wav_audio_data)
-        temp_audio_path = temp_audio.name
-
-    with st.spinner("🔍 Transcribing with Whisper..."):
-        with open(temp_audio_path, "rb") as f:
-            response = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=f
-            )
-        transcription = response.text
-        st.write(f"🗣️ You said: {transcription}")
-
-        # Emotion + response
-        emotion = analyze_emotion(transcription)
-        st.write(f"🧠 Detected Emotion: {emotion}")
-        mentor_reply = ai_mentor_response(transcription, emotion)
-        st.write(f"💡 AI Mentor: {mentor_reply}")
-
-
-# Initialize OpenAI client (new syntax)
+# Initialize OpenAI client
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Analyze Emotion (Mocked for now)
+# Mock emotion detector
 def analyze_emotion(text):
     emotions = ["Calm", "Happy", "Frustrated", "Stressed", "Excited"]
     return np.random.choice(emotions)
 
-# Whisper Transcription using OpenAI v1.x
-def transcribe_audio_file(audio_file):
-    try:
-        with st.spinner("🔍 Transcribing audio with Whisper..."):
-            response = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file
-            )
-            return response.text
-    except Exception as e:
-        return f"❌ Error: {str(e)}"
-
-# AI Mentor Response using OpenAI v1.x
+# GPT-4 AI Mentor
 def ai_mentor_response(user_input, emotion):
     prompt = f"You are an AI mentor helping someone who is feeling {emotion}. Provide motivational and actionable advice for this concern: {user_input}"
     try:
@@ -64,23 +29,57 @@ def ai_mentor_response(user_input, emotion):
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"❌ Error generating AI response: {str(e)}"
+        return f"❌ Error: {str(e)}"
 
-# Streamlit UI
+# Mic audio recorder (webrtc)
+class AudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.recorded_frames = []
+    
+    def recv(self, frame):
+        self.recorded_frames.append(frame.to_ndarray())
+        return frame
+
+# UI
 st.title("🚀 ThriveX AI Mentor")
 st.write("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
-# Upload Section
-audio_file = st.file_uploader("🎙️ Upload a voice recording (MP3/WAV/M4A)", type=["mp3", "wav", "m4a"])
+st.subheader("🎙️ Speak into the mic")
 
-if audio_file:
-    st.audio(audio_file, format="audio/wav")
-    transcribed_text = transcribe_audio_file(audio_file)
-    st.write(f"🗣️ You said: {transcribed_text}")
-    
-    if transcribed_text:
-        emotion = analyze_emotion(transcribed_text)
+ctx = webrtc_streamer(
+    key="speech",
+    audio_processor_factory=AudioProcessor,
+    media_stream_constraints={"audio": True, "video": False},
+    async_processing=True,
+)
+
+if ctx.audio_processor and ctx.audio_processor.recorded_frames:
+    st.success("✅ Audio captured!")
+
+    # Save audio
+    temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    audio_data = b"".join([frame.tobytes() for frame in ctx.audio_processor.recorded_frames])
+    temp_audio.write(audio_data)
+    temp_audio.flush()
+    audio_path = temp_audio.name
+
+    st.audio(audio_path)
+
+    try:
+        with st.spinner("🔍 Transcribing with Whisper..."):
+            with open(audio_path, "rb") as f:
+                transcription = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=f
+                ).text
+        st.write(f"🗣️ You said: {transcription}")
+
+        # Emotion + AI
+        emotion = analyze_emotion(transcription)
         st.write(f"🧠 Detected Emotion: {emotion}")
-        
-        mentor_reply = ai_mentor_response(transcribed_text, emotion)
-        st.write(f"💡 AI Mentor: {mentor_reply}")
+        response = ai_mentor_response(transcription, emotion)
+        st.write(f"💡 AI Mentor: {response}")
+
+    except Exception as e:
+        st.error(f"Transcription error: {e}")
+
