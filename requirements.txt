@@ -1,7 +1,6 @@
 streamlit
 streamlit-webrtc
 av
-
 openai>=1.0.0
 numpy
 scipy
