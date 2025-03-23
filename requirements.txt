@@ -1,6 +1,6 @@
-streamlit-audio-recorder
-pydub
+streamlit
 openai>=1.0.0
 numpy
 scipy
-streamlit
+pydub
+soundfile
