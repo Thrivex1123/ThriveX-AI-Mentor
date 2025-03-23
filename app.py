@@ -2,6 +2,29 @@ import streamlit as st
 import openai
 import numpy as np
 from datetime import datetime
+import tempfile
+import os
+
+def transcribe_audio_file(audio_file):
+    try:
+        # Get file extension (e.g. .m4a)
+        file_extension = os.path.splitext(audio_file.name)[-1]
+
+        # Save the uploaded file to a temp file with the correct extension
+        with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temp:
+            temp.write(audio_file.read())
+            temp_path = temp.name
+
+        with st.spinner("🔍 Transcribing audio with Whisper..."):
+            with open(temp_path, "rb") as f:
+                response = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=f
+                )
+            return response.text
+
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
 
 # Initialize OpenAI client (new syntax)
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
