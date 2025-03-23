@@ -4,30 +4,32 @@ import numpy as np
 from datetime import datetime
 from st_audiorec import st_audiorec
 import tempfile
+st.subheader("🎙️ Record your voice")
 
-import tempfile
-import os
+wav_audio_data = st_audiorec()
 
-def transcribe_audio_file(audio_file):
-    try:
-        # Get file extension (e.g. .m4a)
-        file_extension = os.path.splitext(audio_file.name)[-1]
+if wav_audio_data is not None:
+    st.audio(wav_audio_data, format="audio/wav")
 
-        # Save the uploaded file to a temp file with the correct extension
-        with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temp:
-            temp.write(audio_file.read())
-            temp_path = temp.name
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
+        temp_audio.write(wav_audio_data)
+        temp_audio_path = temp_audio.name
 
-        with st.spinner("🔍 Transcribing audio with Whisper..."):
-            with open(temp_path, "rb") as f:
-                response = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=f
-                )
-            return response.text
+    with st.spinner("🔍 Transcribing with Whisper..."):
+        with open(temp_audio_path, "rb") as f:
+            response = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=f
+            )
+        transcription = response.text
+        st.write(f"🗣️ You said: {transcription}")
 
-    except Exception as e:
-        return f"❌ Error: {str(e)}"
+        # Emotion + response
+        emotion = analyze_emotion(transcription)
+        st.write(f"🧠 Detected Emotion: {emotion}")
+        mentor_reply = ai_mentor_response(transcription, emotion)
+        st.write(f"💡 AI Mentor: {mentor_reply}")
+
 
 # Initialize OpenAI client (new syntax)
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
