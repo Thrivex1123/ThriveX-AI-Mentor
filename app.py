@@ -3,35 +3,38 @@ import openai
 import numpy as np
 from datetime import datetime
 
-# Load API key securely from Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Initialize OpenAI client (new syntax)
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Analyze Emotion (Mocked for now)
 def analyze_emotion(text):
     emotions = ["Calm", "Happy", "Frustrated", "Stressed", "Excited"]
     return np.random.choice(emotions)
 
-# Whisper Transcription from uploaded file
+# Whisper Transcription using OpenAI v1.x
 def transcribe_audio_file(audio_file):
     try:
         with st.spinner("🔍 Transcribing audio with Whisper..."):
-            response = openai.Audio.transcribe("whisper-1", audio_file)
-            return response['text']
+            response = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+            return response.text
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
-# AI Mentor Response
+# AI Mentor Response using OpenAI v1.x
 def ai_mentor_response(user_input, emotion):
     prompt = f"You are an AI mentor helping someone who is feeling {emotion}. Provide motivational and actionable advice for this concern: {user_input}"
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4-turbo",
+        response = client.chat.completions.create(
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a supportive and motivational AI life coach."},
                 {"role": "user", "content": prompt}
             ]
         )
-        return response['choices'][0]['message']['content']
+        return response.choices[0].message.content
     except Exception as e:
         return f"❌ Error generating AI response: {str(e)}"
 
