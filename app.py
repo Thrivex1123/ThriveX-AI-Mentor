@@ -55,6 +55,6 @@ ctx = webrtc_streamer(
 # Step 2: Transcribe on button click
 if ctx.state.playing and ctx.audio_processor and st.button("✅ Done Recording & Analyze"):
     if ctx.audio_processor.recorded_frames:
-        with st.spinner("🎧 Processing your audio..."):
+        with st.spinner("🎧Processing your audio..."):
             # Save recortemp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav_
 
