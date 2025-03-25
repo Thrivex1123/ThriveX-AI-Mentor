@@ -6,3 +6,7 @@ numpy
 scipy
 pydub
 soundfile
+streamlit
+openai
+speechrecognition
+pyaudio
