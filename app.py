@@ -55,6 +55,32 @@ ctx = webrtc_streamer(
 # Step 2: Transcribe on button click
 if ctx.state.playing and ctx.audio_processor and st.button("✅ Done Recording & Analyze"):
     if ctx.audio_processor.recorded_frames:
-        with st.spinner("🎧Processing your audio..."):
-            # Save recortemp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav_
+        with st.spinner("🎧 Processing your audio..."):
+            # Save recorded audio
+            temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+            audio_data = b"".join([frame.tobytes() for frame in ctx.audio_processor.recorded_frames])
+            temp_audio.write(audio_data)
+            temp_audio.flush()
+            audio_path = temp_audio.name
 
+            # Transcribe
+            try:
+                with open(audio_path, "rb") as f:
+                    transcription = client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=f
+                    ).text
+                st.write(f"🗣️ You said: {transcription}")
+
+                # Emotion
+                emotion = analyze_emotion(transcription)
+                st.write(f"🧠 Detected Emotion: {emotion}")
+
+                # AI Coach
+                reply = ai_mentor_response(transcription, emotion)
+                st.write(f"💡 AI Mentor: {reply}")
+
+            except Exception as e:
+                st.error(f"Transcription error: {e}")
+    else:
+        st.warning("🎙️ Please record something first.")
