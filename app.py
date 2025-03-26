@@ -1,17 +1,16 @@
 import streamlit as st
 import openai
-import numpy as np
-from datetime import datetime
-from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
-from textblob import TextBlob
-import tempfile
-import os
 import random
-git add runtime.txt
-git commit -m "Set Python version for Streamlit compatibility"
-git push
-# 🎯 DAILY AFFIRMATIONS
-DAILY_AFFIRMATIONS = [
+from textblob import TextBlob
+import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# ---------- SETTINGS ----------
+st.set_page_config(page_title="ThriveX AI Mentor", page_icon="🚀")
+
+# ---------- DAILY AFFIRMATIONS ----------
+AFFIRMATIONS = [
     "You are capable of amazing things.",
     "Today is a fresh start.",
     "You have the power to create change.",
@@ -20,20 +19,11 @@ DAILY_AFFIRMATIONS = [
     "You are growing through what you're going through.",
     "Your potential is limitless.",
 ]
-st.write("✅ Reached audio component init")
-def get_daily_affirmation():
-    return random.choice(DAILY_AFFIRMATIONS)
 
-# 🎧 AUDIO PROCESSOR
-class AudioProcessor(AudioProcessorBase):
-    def __init__(self):
-        self.recorded_frames = []
+def get_affirmation():
+    return random.choice(AFFIRMATIONS)
 
-    def recv(self, frame):
-        self.recorded_frames.append(frame.to_ndarray())
-        return frame
-
-# 💬 EMOTION DETECTOR using TextBlob
+# ---------- EMOTION DETECTOR ----------
 def analyze_emotion(text):
     polarity = TextBlob(text).sentiment.polarity
     if polarity > 0.5:
@@ -47,72 +37,53 @@ def analyze_emotion(text):
     else:
         return "Stressed"
 
-# 🤖 AI MENTOR RESPONSE using GPT-4
-def ai_mentor_response(user_input, emotion):
-    prompt = f"You are an AI mentor helping someone who is feeling {emotion}. Provide motivational and actionable advice for this concern: {user_input}"
+# ---------- AI MENTOR ----------
+def get_ai_response(prompt, emotion):
     try:
         client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a supportive and motivational AI life coach."},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": f"I'm feeling {emotion}. {prompt}"}
             ]
         )
         return response.choices[0].message.content
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"❌ Error: {e}"
 
-# 🚀 STREAMLIT APP UI
-st.set_page_config(page_title="ThriveX AI Mentor", page_icon="🚀")
+# ---------- GOOGLE SHEETS LOGGING ----------
+def log_to_gsheet(data):
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gsheets_creds"], scope)
+        client = gspread.authorize(creds)
+        sheet = client.open("ThriveX Logs").sheet1
+        sheet.append_row(data)
+    except Exception as e:
+        st.error(f"Google Sheets Logging Failed: {e}")
 
+# ---------- UI ----------
 st.title("🚀 ThriveX AI Mentor")
-st.write("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
+st.write("An AI-powered coach that understands how you feel and gives real-time support.")
 
-# 🌞 DAILY AFFIRMATION
-if st.button("🌄 Get Today's Affirmation"):
-    st.success(f"🌞 Daily Affirmation: *{get_daily_affirmation()}*")
+if st.button("🌞 Show Daily Affirmation"):
+    st.success(get_affirmation())
 
-# 🎙️ AUDIO RECORDING
-st.subheader("🎤 Step 1: Speak into the mic below")
-ctx = webrtc_streamer(
-    key="speech",
-    audio_processor_factory=AudioProcessor,
-    media_stream_constraints={"audio": True, "video": False},
-    async_processing=True,
-)
+st.subheader("💬 What's on your mind?")
+user_input = st.text_area("Type your thoughts or concerns here", height=150)
 
-# 🧠 TRANSCRIBE, EMOTION + GPT ADVICE
-if ctx.state.playing and ctx.audio_processor and st.button("✅ Done Recording & Analyze"):
-    if ctx.audio_processor.recorded_frames:
-        with st.spinner("🎧 Processing your audio..."):
-            # Save audio to temporary file
-            temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-            audio_data = b"".join([frame.tobytes() for frame in ctx.audio_processor.recorded_frames])
-            temp_audio.write(audio_data)
-            temp_audio.flush()
-            audio_path = temp_audio.name
-
-            try:
-                # Transcribe using OpenAI Whisper
-                client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-                with open(audio_path, "rb") as f:
-                    transcription = client.audio.transcriptions.create(
-                        model="whisper-1",
-                        file=f
-                    ).text
-
-                st.write(f"🗣️ You said: `{transcription}`")
-
-                # Detect emotion
-                emotion = analyze_emotion(transcription)
-                st.write(f"🧠 Detected Emotion: `{emotion}`")
-
-                # Get AI Mentor's response
-                reply = ai_mentor_response(transcription, emotion)
-                st.write(f"💡 AI Mentor: {reply}")
-
-            except Exception as e:
-                st.error(f"❌ Transcription error: {e}")
+if st.button("🧠 Analyze & Get Advice"):
+    if user_input.strip() == "":
+        st.warning("Please enter a message.")
     else:
-        st.warning("🎙️ Please record something first.")
+        with st.spinner("Thinking..."):
+            emotion = analyze_emotion(user_input)
+            response = get_ai_response(user_input, emotion)
+
+            st.write(f"🧠 Detected Emotion: `{emotion}`")
+            st.write(f"💡 AI Mentor: {response}")
+
+            # Log to GSheet
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_to_gsheet([now, user_input, emotion, response])
