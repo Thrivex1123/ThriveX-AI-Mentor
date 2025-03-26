@@ -3,36 +3,53 @@ import openai
 import numpy as np
 from datetime import datetime
 from streamlit_webrtc import webrtc_streamer, AudioProcessorBase
-import av
-import queue
+from textblob import TextBlob
 import tempfile
 import os
 import random
-sudo apt-get install libsndfile1
-✅ Suggested Working requirements
+
+# 🎯 DAILY AFFIRMATIONS
 DAILY_AFFIRMATIONS = [
     "You are capable of amazing things.",
     "Today is a fresh start.",
     "You have the power to create change.",
     "You are strong, resilient, and brave.",
-    "Every step you take matters."
+    "Every step you take matters.",
+    "You are growing through what you're going through.",
+    "Your potential is limitless.",
 ]
 
 def get_daily_affirmation():
     return random.choice(DAILY_AFFIRMATIONS)
 
-# Initialize OpenAI client
-client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# 🎧 AUDIO PROCESSOR
+class AudioProcessor(AudioProcessorBase):
+    def __init__(self):
+        self.recorded_frames = []
 
-# Emotion detector (mock)
+    def recv(self, frame):
+        self.recorded_frames.append(frame.to_ndarray())
+        return frame
+
+# 💬 EMOTION DETECTOR using TextBlob
 def analyze_emotion(text):
-    emotions = ["Calm", "Happy", "Frustrated", "Stressed", "Excited"]
-    return np.random.choice(emotions)
+    polarity = TextBlob(text).sentiment.polarity
+    if polarity > 0.5:
+        return "Excited"
+    elif polarity > 0:
+        return "Happy"
+    elif polarity == 0:
+        return "Calm"
+    elif polarity > -0.5:
+        return "Frustrated"
+    else:
+        return "Stressed"
 
-# GPT-4 Coach
+# 🤖 AI MENTOR RESPONSE using GPT-4
 def ai_mentor_response(user_input, emotion):
     prompt = f"You are an AI mentor helping someone who is feeling {emotion}. Provide motivational and actionable advice for this concern: {user_input}"
     try:
+        client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -44,57 +61,56 @@ def ai_mentor_response(user_input, emotion):
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
-# Audio Recorder Class
-class AudioProcessor(AudioProcessorBase):
-    def __init__(self):
-        self.recorded_frames = []
+# 🚀 STREAMLIT APP UI
+st.set_page_config(page_title="ThriveX AI Mentor", page_icon="🚀")
 
-    def recv(self, frame):
-        self.recorded_frames.append(frame.to_ndarray())
-        return frame
-
-# UI
 st.title("🚀 ThriveX AI Mentor")
 st.write("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
-st.subheader("🎙️ Step 1: Speak into the mic below")
+# 🌞 DAILY AFFIRMATION
+if st.button("🌄 Get Today's Affirmation"):
+    st.success(f"🌞 Daily Affirmation: *{get_daily_affirmation()}*")
+
+# 🎙️ AUDIO RECORDING
+st.subheader("🎤 Step 1: Speak into the mic below")
 ctx = webrtc_streamer(
     key="speech",
     audio_processor_factory=AudioProcessor,
     media_stream_constraints={"audio": True, "video": False},
     async_processing=True,
 )
-st.success(f"🌞 Daily Affirmation: *{get_daily_affirmation()}*")
 
-# Step 2: Transcribe on button click
+# 🧠 TRANSCRIBE, EMOTION + GPT ADVICE
 if ctx.state.playing and ctx.audio_processor and st.button("✅ Done Recording & Analyze"):
     if ctx.audio_processor.recorded_frames:
         with st.spinner("🎧 Processing your audio..."):
-            # Save recorded audio
+            # Save audio to temporary file
             temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
             audio_data = b"".join([frame.tobytes() for frame in ctx.audio_processor.recorded_frames])
             temp_audio.write(audio_data)
             temp_audio.flush()
             audio_path = temp_audio.name
 
-            # Transcribe
             try:
+                # Transcribe using OpenAI Whisper
+                client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
                 with open(audio_path, "rb") as f:
                     transcription = client.audio.transcriptions.create(
                         model="whisper-1",
                         file=f
                     ).text
-                st.write(f"🗣️ You said: {transcription}")
 
-                # Emotion
+                st.write(f"🗣️ You said: `{transcription}`")
+
+                # Detect emotion
                 emotion = analyze_emotion(transcription)
-                st.write(f"🧠 Detected Emotion: {emotion}")
+                st.write(f"🧠 Detected Emotion: `{emotion}`")
 
-                # AI Coach
+                # Get AI Mentor's response
                 reply = ai_mentor_response(transcription, emotion)
                 st.write(f"💡 AI Mentor: {reply}")
 
             except Exception as e:
-                st.error(f"Transcription error: {e}")
+                st.error(f"❌ Transcription error: {e}")
     else:
         st.warning("🎙️ Please record something first.")
