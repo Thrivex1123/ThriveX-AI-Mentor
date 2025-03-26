@@ -20,7 +20,7 @@ DAILY_AFFIRMATIONS = [
     "You are growing through what you're going through.",
     "Your potential is limitless.",
 ]
-
+st.write("✅ Reached audio component init")
 def get_daily_affirmation():
     return random.choice(DAILY_AFFIRMATIONS)
 
