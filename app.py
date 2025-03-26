@@ -8,7 +8,8 @@ import queue
 import tempfile
 import os
 import random
-
+sudo apt-get install libsndfile1
+✅ Suggested Working requirements
 DAILY_AFFIRMATIONS = [
     "You are capable of amazing things.",
     "Today is a fresh start.",
