@@ -1,5 +1,5 @@
+soundfile
 streamlit
-
 openai
-
-pyaudio & speechrecognition (for audio input)
+speechrecognition
+pyaudio
