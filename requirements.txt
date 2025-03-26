@@ -3,3 +3,4 @@ openai==1.14.1
 textblob
 gspread
 oauth2client
+streamlit>=1.28
