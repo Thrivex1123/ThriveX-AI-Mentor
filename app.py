@@ -7,7 +7,9 @@ from textblob import TextBlob
 import tempfile
 import os
 import random
-
+git add runtime.txt
+git commit -m "Set Python version for Streamlit compatibility"
+git push
 # 🎯 DAILY AFFIRMATIONS
 DAILY_AFFIRMATIONS = [
     "You are capable of amazing things.",
