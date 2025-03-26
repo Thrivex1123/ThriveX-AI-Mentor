@@ -63,6 +63,7 @@ ctx = webrtc_streamer(
     media_stream_constraints={"audio": True, "video": False},
     async_processing=True,
 )
+st.success(f"🌞 Daily Affirmation: *{get_daily_affirmation()}*")
 
 # Step 2: Transcribe on button click
 if ctx.state.playing and ctx.audio_processor and st.button("✅ Done Recording & Analyze"):
