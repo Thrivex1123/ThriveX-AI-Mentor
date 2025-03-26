@@ -7,6 +7,18 @@ import av
 import queue
 import tempfile
 import os
+import random
+
+DAILY_AFFIRMATIONS = [
+    "You are capable of amazing things.",
+    "Today is a fresh start.",
+    "You have the power to create change.",
+    "You are strong, resilient, and brave.",
+    "Every step you take matters."
+]
+
+def get_daily_affirmation():
+    return random.choice(DAILY_AFFIRMATIONS)
 
 # Initialize OpenAI client
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
