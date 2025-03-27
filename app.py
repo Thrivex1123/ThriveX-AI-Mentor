@@ -8,7 +8,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 st-gsheets-connection
 # ---------- SETTINGS ----------
 st.set_page_config(page_title="ThriveX AI Mentor", page_icon="🚀")
-
+streamlit
+openai
+speechrecognition
+pyaudio
 # ---------- DAILY AFFIRMATIONS ----------
 AFFIRMATIONS = [
     "You are capable of amazing things.",
