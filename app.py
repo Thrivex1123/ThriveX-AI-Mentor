@@ -5,7 +5,7 @@ from textblob import TextBlob
 import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-st-gsheets-connection
+
 # ---------- SETTINGS ----------
 st.set_page_config(page_title="ThriveX AI Mentor", page_icon="🚀")
 streamlit
