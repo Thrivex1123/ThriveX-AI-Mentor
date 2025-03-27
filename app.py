@@ -1,92 +1,53 @@
+# 🚀 ThriveX AI Mentor
+# An AI-powered coach that listens, understands your emotion, and offers real-time support.
+
 import streamlit as st
 import openai
-import random
-from textblob import TextBlob
-import datetime
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import speech_recognition as sr
+import os
 
-# ---------- SETTINGS ----------
-st.set_page_config(page_title="ThriveX AI Mentor", page_icon="🚀")
-streamlit
-openai
-speechrecognition
-pyaudio
-# ---------- DAILY AFFIRMATIONS ----------
-AFFIRMATIONS = [
-    "You are capable of amazing things.",
-    "Today is a fresh start.",
-    "You have the power to create change.",
-    "You are strong, resilient, and brave.",
-    "Every step you take matters.",
-    "You are growing through what you're going through.",
-    "Your potential is limitless.",
-]
+# Set Streamlit page config
+st.set_page_config(page_title="ThriveX AI Mentor", layout="centered")
 
-def get_affirmation():
-    return random.choice(AFFIRMATIONS)
+# Secret key config
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# ---------- EMOTION DETECTOR ----------
-def analyze_emotion(text):
-    polarity = TextBlob(text).sentiment.polarity
-    if polarity > 0.5:
-        return "Excited"
-    elif polarity > 0:
-        return "Happy"
-    elif polarity == 0:
-        return "Calm"
-    elif polarity > -0.5:
-        return "Frustrated"
-    else:
-        return "Stressed"
-
-# ---------- AI MENTOR ----------
-def get_ai_response(prompt, emotion):
-    try:
-        client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a supportive and motivational AI life coach."},
-                {"role": "user", "content": f"I'm feeling {emotion}. {prompt}"}
-            ]
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"❌ Error: {e}"
-
-# ---------- GOOGLE SHEETS LOGGING ----------
-def log_to_gsheet(data):
-    try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gsheets_creds"], scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("ThriveX Logs").sheet1
-        sheet.append_row(data)
-    except Exception as e:
-        st.error(f"Google Sheets Logging Failed: {e}")
-
-# ---------- UI ----------
+# --- HEADER ---
 st.title("🚀 ThriveX AI Mentor")
-st.write("An AI-powered coach that understands how you feel and gives real-time support.")
+st.markdown("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
-if st.button("🌞 Show Daily Affirmation"):
-    st.success(get_affirmation())
+# --- MICROPHONE INPUT ---
+st.subheader("🎙️ Step 1: Speak into the mic below")
 
-st.subheader("💬 What's on your mind?")
-user_input = st.text_area("Type your thoughts or concerns here", height=150)
+# Audio recording placeholder
+r = sr.Recognizer()
+audio_text = ""
 
-if st.button("🧠 Analyze & Get Advice"):
-    if user_input.strip() == "":
-        st.warning("Please enter a message.")
-    else:
-        with st.spinner("Thinking..."):
-            emotion = analyze_emotion(user_input)
-            response = get_ai_response(user_input, emotion)
+with st.form("mic_form"):
+    record_button = st.form_submit_button("🎤 Record Now")
+    if record_button:
+        try:
+            with sr.Microphone() as source:
+                st.info("Listening... please speak clearly")
+                audio = r.listen(source, timeout=5, phrase_time_limit=10)
+                audio_text = r.recognize_google(audio)
+                st.success(f"🗣️ You said: {audio_text}")
+        except Exception as e:
+            st.error(f"❌ Could not process audio: {e}")
 
-            st.write(f"🧠 Detected Emotion: `{emotion}`")
-            st.write(f"💡 AI Mentor: {response}")
+# --- AI RESPONSE ---
+if audio_text:
+    st.subheader("💬 Step 2: AI Coaching Response")
+    with st.spinner("Thinking..."):
+        try:
+            response = openai.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a motivational mindset coach."},
+                    {"role": "user", "content": audio_text}
+                ]
+            )
+            st.markdown(f"🤖 AI: {response.choices[0].message.content}")
+        except Exception as e:
+            st.error(f"⚠️ Error communicating with AI: {e}")
 
-            # Log to GSheet
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log_to_gsheet([now, user_input, emotion, response])
