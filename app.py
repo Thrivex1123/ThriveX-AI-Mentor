@@ -5,7 +5,8 @@ import streamlit as st
 import openai
 import speech_recognition as sr
 import os
-
+portaudio19-dev
+python3-distutils
 # Set Streamlit page config
 st.set_page_config(page_title="ThriveX AI Mentor", layout="centered")
 
