@@ -1,1 +1,2 @@
 python3-distuti
+python3-distutils
