@@ -1,17 +1,26 @@
-# 🚀 ThriveX AI Mentor
-# An AI-powered coach that listens, understands your emotion, and offers real-time support.
-
 import streamlit as st
 import openai
 import speech_recognition as sr
 import os
-portaudio19-dev
-python3-distutils
-# Set Streamlit page config
+
+# Optional voice playback (local only)
+try:
+    from gtts import gTTS
+    import tempfile
+    import pygame
+    pygame_available = True
+except ImportError:
+    pygame_available = False
+
+# --- STREAMLIT CONFIG ---
 st.set_page_config(page_title="ThriveX AI Mentor", layout="centered")
 
-# Secret key config
+# --- OPENAI SECRET KEY ---
 openai.api_key = st.secrets["OPENAI_API_KEY"]
+
+# --- SESSION STATE FOR HISTORY ---
+if 'history' not in st.session_state:
+    st.session_state.history = []
 
 # --- HEADER ---
 st.title("🚀 ThriveX AI Mentor")
@@ -20,7 +29,6 @@ st.markdown("An AI-powered coach that listens, understands your emotion, and off
 # --- MICROPHONE INPUT ---
 st.subheader("🎙️ Step 1: Speak into the mic below")
 
-# Audio recording placeholder
 r = sr.Recognizer()
 audio_text = ""
 
@@ -44,11 +52,41 @@ if audio_text:
             response = openai.chat.completions.create(
                 model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are a motivational mindset coach."},
+                    {
+                        "role": "system",
+                        "content": "You are a compassionate and motivational coach. Respond with empathy, actionable advice, and an uplifting tone."
+                    },
                     {"role": "user", "content": audio_text}
                 ]
             )
-            st.markdown(f"🤖 AI: {response.choices[0].message.content}")
+            ai_message = response.choices[0].message.content
+            st.markdown(f"🤖 AI: {ai_message}")
+
+            # Save to history
+            st.session_state.history.append(("🗣️ You", audio_text))
+            st.session_state.history.append(("🤖 AI", ai_message))
+
+            # Optional: Speak AI response (for local app)
+            if pygame_available and st.checkbox("🔊 Read response out loud (local only)"):
+                def speak(text):
+                    tts = gTTS(text)
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+                        tts.save(fp.name)
+                        pygame.mixer.init()
+                        pygame.mixer.music.load(fp.name)
+                        pygame.mixer.music.play()
+
+                speak(ai_message)
+
         except Exception as e:
             st.error(f"⚠️ Error communicating with AI: {e}")
 
+# --- CHAT HISTORY ---
+if st.session_state.history:
+    st.subheader("📝 Conversation History")
+    for speaker, text in st.session_state.history:
+        st.markdown(f"**{speaker}:** {text}")
+
+# --- RETRY BUTTON ---
+if st.button("🔁 Try Again"):
+    st.experimental_rerun()
