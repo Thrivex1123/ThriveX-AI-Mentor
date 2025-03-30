@@ -53,9 +53,15 @@ if audio_text:
                 model="gpt-4",
                 messages=[
                     {
-                        "role": "system",
-                        "content": "You are a compassionate and motivational coach. Respond with empathy, actionable advice, and an uplifting tone."
-                    },
+                      {
+    "role": "system",
+    "content": (
+        "You are a compassionate and emotionally intelligent AI coach. "
+        "First analyze the user's message for emotional tone (e.g., stress, sadness, motivation, excitement), "
+        "then respond with empathy and tailored advice. Keep it uplifting."
+    )
+},
+
                     {"role": "user", "content": audio_text}
                 ]
             )
