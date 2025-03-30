@@ -1,11 +1,5 @@
-streamlit==1.32.0
-openai==1.14.1
-textblob
-gspread
-oauth2client
-streamlit>=1.28
 streamlit
-speechrecognition==3.10.1
-pyaudio
-portaudio19-dev
-python3-distutils
+openai
+speechrecognition
+gtts
+pygame
