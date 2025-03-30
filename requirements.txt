@@ -7,3 +7,5 @@ streamlit>=1.28
 streamlit
 speechrecognition==3.10.1
 pyaudio
+portaudio19-dev
+python3-distutils
