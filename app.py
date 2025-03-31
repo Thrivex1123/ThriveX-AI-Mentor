@@ -49,22 +49,24 @@ if audio_text:
     st.subheader("💬 Step 2: AI Coaching Response")
     with st.spinner("Thinking..."):
         try:
-            response = openai.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {
-                      {
-    "role": "system",
-    "content": (
-        "You are a compassionate and emotionally intelligent AI coach. "
-        "First analyze the user's message for emotional tone (e.g., stress, sadness, motivation, excitement), "
-        "then respond with empathy and tailored advice. Keep it uplifting."
-    )
-},
-
-                    {"role": "user", "content": audio_text}
-                ]
+   response = openai.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {
+            "role": "system",
+            "content": (
+                "You are a compassionate and emotionally intelligent AI coach. "
+                "First analyze the user's message for emotional tone (e.g., stress, sadness, motivation, excitement), "
+                "then respond with empathy and tailored advice. Keep it uplifting."
             )
+        },
+        {
+            "role": "user",
+            "content": audio_text
+        }
+    ]
+)
+
             ai_message = response.choices[0].message.content
             st.markdown(f"🤖 AI: {ai_message}")
 
