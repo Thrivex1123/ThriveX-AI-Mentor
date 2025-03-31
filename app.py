@@ -9,9 +9,9 @@ st.title("🚀 ThriveX AI Mentor")
 st.markdown("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
 # API key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else "your-openai-key-here"
 
-# Microphone input
+# Mic input with Whisper
 r = sr.Recognizer()
 audio_text = ""
 
@@ -20,7 +20,7 @@ with st.form("mic_form"):
     if record_button:
         try:
             with sr.Microphone() as source:
-                st.info("Listening... please speak clearly")
+                st.info("🎧 Listening... please speak clearly")
                 audio = r.listen(source, timeout=5, phrase_time_limit=10)
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio_file:
                     wav_data = audio.get_wav_data()
@@ -31,10 +31,11 @@ with st.form("mic_form"):
                 transcript = openai.Audio.transcribe("whisper-1", audio_file)
                 audio_text = transcript["text"]
                 st.success(f"🗣️ You said: {audio_text}")
+
         except Exception as e:
             st.error(f"❌ Could not process audio: {e}")
 
-# AI Coaching Response
+# AI Response
 if audio_text:
     st.subheader("💬 AI Coaching Response")
     with st.spinner("Thinking..."):
