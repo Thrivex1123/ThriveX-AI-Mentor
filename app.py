@@ -2,7 +2,9 @@ import streamlit as st
 import openai
 import speech_recognition as sr
 import os
-
+git add app.py
+git commit -m "Fix syntax error in OpenAI chat call"
+git push
 # Optional voice playback (local only)
 try:
     from gtts import gTTS
