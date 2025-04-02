@@ -11,27 +11,25 @@ st.markdown("An AI-powered coach that listens, understands your emotion, and off
 openai.api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else "sk-your-key-here"
 
 r = sr.Recognizer()
+st.subheader("🎙️ Step 1: Speak or Type")
+
 audio_text = ""
 
-with st.form("mic_form"):
-    record_button = st.form_submit_button("🎤 Record Now")
-    if record_button:
+# Upload audio fallback
+uploaded_audio = st.file_uploader("📁 Upload a short audio file (.wav)", type=["wav"])
+if uploaded_audio:
+    with st.spinner("Transcribing audio..."):
         try:
-            with sr.Microphone() as source:
-                st.info("🎧 Listening... please speak clearly")
-                audio = r.listen(source, timeout=5, phrase_time_limit=10)
-                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio_file:
-                    wav_data = audio.get_wav_data()
-                    temp_audio_file.write(wav_data)
-                    temp_audio_path = temp_audio_file.name
-
-            with open(temp_audio_path, "rb") as audio_file:
-                transcript = openai.Audio.transcribe("whisper-1", audio_file)
-                audio_text = transcript["text"]
-                st.success(f"🗣️ You said: {audio_text}")
-
+            transcript = openai.Audio.transcribe("whisper-1", uploaded_audio)
+            audio_text = transcript["text"]
+            st.success(f"🗣️ You said: {audio_text}")
         except Exception as e:
             st.error(f"❌ Could not process audio: {e}")
+
+# Text input fallback
+typed_input = st.text_input("✍️ Or type your message here")
+if typed_input:
+    audio_text = typed_input
 
 if audio_text:
     st.subheader("💬 AI Coaching Response")
