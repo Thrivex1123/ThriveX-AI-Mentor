@@ -3,15 +3,13 @@ import openai
 import speech_recognition as sr
 import tempfile
 
-# Streamlit config
 st.set_page_config(page_title="ThriveX AI Mentor", layout="centered")
 st.title("🚀 ThriveX AI Mentor")
 st.markdown("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
-# API key
-openai.api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else "your-openai-key-here"
+# OpenAI key: put in secrets.toml or paste here
+openai.api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else "sk-your-key-here"
 
-# Mic input with Whisper
 r = sr.Recognizer()
 audio_text = ""
 
@@ -35,7 +33,6 @@ with st.form("mic_form"):
         except Exception as e:
             st.error(f"❌ Could not process audio: {e}")
 
-# AI Response
 if audio_text:
     st.subheader("💬 AI Coaching Response")
     with st.spinner("Thinking..."):
