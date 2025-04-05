@@ -1,39 +1,45 @@
 import streamlit as st
 import openai
+import speech_recognition as sr
+import os
+import tempfile
 
-# 🌟 Page Setup
 st.set_page_config(page_title="ThriveX AI Mentor", layout="centered")
+
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+
 st.title("🚀 ThriveX AI Mentor")
-st.markdown("An AI-powered coach that listens, understands your emotions, and offers real-time support with empathy.")
+st.markdown("An AI-powered coach that listens, understands your emotion, and offers real-time support.")
 
-# 🔐 OpenAI Key Setup
-openai.api_key = st.secrets["OPENAI_API_KEY"] if "OPENAI_API_KEY" in st.secrets else "sk-your-key-here"
+# Step 1: File or Text input
+st.subheader("🎙️ Step 1: Speak or Type")
+audio_file = st.file_uploader("📁 Upload a short audio file (.wav)", type=["wav"])
+text_input = st.text_input("✍️ Or type your message here")
 
-# 🎤 Input Section
-st.subheader("🎙️ Step 1: Speak or Type Your Heart")
-
+# Step 2: Process input
 audio_text = ""
 
-# 📁 Audio Upload
-uploaded_audio = st.file_uploader("📁 Upload a short voice note (.wav)", type=["wav"])
-if uploaded_audio:
-    with st.spinner("✨ Listening closely..."):
+if audio_file:
+    r = sr.Recognizer()
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(audio_file.read())
+        tmp_path = tmp.name
+
+    with sr.AudioFile(tmp_path) as source:
+        audio = r.record(source)
         try:
-            transcript = openai.Audio.transcribe("whisper-1", uploaded_audio)
-            audio_text = transcript["text"]
+            audio_text = r.recognize_google(audio)
             st.success(f"🗣️ You said: {audio_text}")
         except Exception as e:
-            st.error(f"❌ Audio issue: {e}")
+            st.error(f"❌ Could not process audio: {e}")
 
-# ✍️ Text Input
-typed_input = st.text_input("✍️ Or type how you’re feeling right now")
-if typed_input:
-    audio_text = typed_input
+elif text_input:
+    audio_text = text_input
 
-# 💬 AI Response
+# Step 3: Get AI Response
 if audio_text:
-    st.subheader("💬 ThriveX Coaching Response")
-    with st.spinner("🤖 Thinking with heart..."):
+    st.subheader("💬 AI Coaching Response")
+    with st.spinner("Thinking..."):
         try:
             response = openai.chat.completions.create(
                 model="gpt-4",
@@ -41,29 +47,22 @@ if audio_text:
                     {
                         "role": "system",
                         "content": (
-                            "You are ThriveX, an emotionally intelligent and human-like AI mentor. "
-                            "You speak like a kind friend who truly listens. "
-                            "You respond to emotions with warmth, connection, and gentle encouragement. "
-                            "Be natural, heartfelt, and supportive. Avoid robotic or clinical responses. "
-                            "When someone is down, lift them up. When they’re excited, celebrate with them. Be there."
+                            "You are a compassionate and emotionally intelligent AI coach. "
+                            "Always respond with empathy, warmth, and encouragement. "
+                            "Recognize the user’s emotional state and help them feel heard and safe."
                         )
                     },
-                    {
-                        "role": "user",
-                        "content": audio_text
-                    }
+                    {"role": "user", "content": audio_text}
                 ]
             )
-            ai_message = response.choices[0].message.content
-            st.markdown(f"🤖 **ThriveX says:**\n\n{ai_message}")
+            reply = response.choices[0].message.content
+            st.markdown(f"🤖 **AI:** {reply}")
         except Exception as e:
-            st.error(f"⚠️ Error from AI: {e}")
+            st.error(f"⚠️ Error: {e}")
 
-# 📅 Schedule Button
+# Step 4: Calendly
 st.markdown("---")
-st.subheader("📬 Need a real human too?")
-st.markdown("You're never alone. If you ever want to connect personally, I'm here.")
+st.markdown("💙 Need to talk to someone real?")
+st.markdown("[📅 Book a 1-on-1 session with the ThriveX team](https://calendly.com/your-link)")
 
-if st.button("📅 Schedule a time with me"):
-    st.markdown("[🗓️ Click here to book a session](https://calendly.com/your-link-here) 💙")
 
